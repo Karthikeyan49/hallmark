@@ -1,0 +1,10 @@
+# PHP dependencies (installed via composer, not committed)
+/vendor/
+
+# Node tooling used only for local screenshots/dev — never part of the app
+/node_modules/
+
+# Runtime data
+/storage/database.sqlite
+
+.DS_Store
