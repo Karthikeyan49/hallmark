@@ -15,6 +15,11 @@ compliance composite** the government portal requires for every item.
 Replaces the ~2 min/item of manual photography (≈6.5 hrs for a 200-item batch)
 with a sub-minute programmatic step.
 
+> **Looking for the website?** A single-admin **PHP MVC** web app built on the
+> same engine (ported to PHP GD) lives in [`hallmark-web/`](hallmark-web/) —
+> login, dashboard, upload form and stored item history. This Python package is
+> the standalone image-engine / API reference.
+
 ## The two tracks (report §3)
 
 | | Track A — AI Automation (preferred) | Track B — Template Overlay (fallback) |

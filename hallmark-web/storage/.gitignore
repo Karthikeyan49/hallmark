@@ -1,0 +1,9 @@
+# Keep the storage directories in git, ignore their runtime contents.
+*
+!.gitignore
+!uploads/
+!output/
+uploads/*
+output/*
+!uploads/.gitkeep
+!output/.gitkeep
