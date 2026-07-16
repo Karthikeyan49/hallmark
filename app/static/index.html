@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hallmark — Compliance Composite Generator</title>
+<style>
+  :root { --gold:#b08d57; --ink:#212529; --muted:#6c757d; --border:#dee2e6; --panel:#f8f9fa; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+         color: var(--ink); background:#fff; }
+  header { background: var(--ink); color:#fff; padding: 20px 24px; }
+  header h1 { margin:0; font-size: 20px; }
+  header p { margin:4px 0 0; color:#ced4da; font-size:13px; }
+  main { max-width: 1080px; margin: 0 auto; padding: 24px; display:grid;
+         grid-template-columns: 380px 1fr; gap: 24px; }
+  @media (max-width: 820px){ main { grid-template-columns: 1fr; } }
+  .card { border:1px solid var(--border); border-radius:14px; padding:18px; }
+  label { display:block; font-size:13px; font-weight:600; margin:12px 0 4px; }
+  input, select { width:100%; padding:9px 10px; border:1px solid var(--border);
+                  border-radius:8px; font-size:14px; }
+  .hint { font-size:12px; color:var(--muted); margin-top:3px; }
+  button { margin-top:18px; width:100%; padding:11px; border:0; border-radius:9px;
+           background: var(--gold); color:#fff; font-size:15px; font-weight:600;
+           cursor:pointer; }
+  button:disabled { opacity:.6; cursor:progress; }
+  .result { display:flex; align-items:center; justify-content:center; min-height:320px;
+            background: var(--panel); border-radius:12px; overflow:auto; }
+  .result img { max-width:100%; height:auto; display:block; }
+  .meta { font-size:13px; color:var(--muted); margin-top:10px; }
+  .badge { display:inline-block; background:var(--panel); border:1px solid var(--border);
+           border-radius:20px; padding:3px 10px; margin:2px 4px 0 0; font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Hallmark — Compliance Composite Generator</h1>
+  <p>One model photo + UID + weight → the portal's 3-pane deliverable (UID · Model · Weight).</p>
+</header>
+<main>
+  <form class="card" id="form">
+    <label for="uid">UID (laser-etched)</label>
+    <input id="uid" name="uid" placeholder="e.g. HUID-7A2C9K" required />
+
+    <label for="weight_grams">Weight (grams)</label>
+    <input id="weight_grams" name="weight_grams" type="number" step="0.01" min="0.01"
+           placeholder="2.00" required />
+
+    <label for="item_type">Item type</label>
+    <input id="item_type" name="item_type" placeholder="Ring / Pendant / Stud" />
+
+    <label for="company">Company / centre name</label>
+    <input id="company" name="company" placeholder="Optional" />
+
+    <label for="model_image">Model image (required)</label>
+    <input id="model_image" name="model_image" type="file" accept="image/*" required />
+    <div class="hint">A single clean studio photo of the product.</div>
+
+    <label for="uid_image">UID close-up (optional → Track B)</label>
+    <input id="uid_image" name="uid_image" type="file" accept="image/*" />
+    <div class="hint">Macro of the etched UID. Omit to use the deterministic UID render (Track A).</div>
+
+    <label for="provider">Model-pane provider</label>
+    <select id="provider" name="provider">
+      <option value="">Server default</option>
+      <option value="passthrough">passthrough (0 INR)</option>
+      <option value="rembg">rembg — bg removal (0 INR)</option>
+      <option value="flux">flux — generative (~0.25 INR)</option>
+    </select>
+
+    <button type="submit" id="go">Generate composite</button>
+  </form>
+
+  <section>
+    <div class="result" id="result">
+      <span class="hint">The generated composite will appear here.</span>
+    </div>
+    <div class="meta" id="meta"></div>
+  </section>
+</main>
+
+<script>
+const form = document.getElementById('form');
+const result = document.getElementById('result');
+const meta = document.getElementById('meta');
+const go = document.getElementById('go');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  go.disabled = true; go.textContent = 'Generating…';
+  meta.textContent = '';
+  try {
+    const fd = new FormData(form);
+    const provider = fd.get('provider');
+    fd.delete('provider');            // provider is a query param
+    if (!fd.get('uid_image')?.size) fd.delete('uid_image');
+    const url = '/api/composite' + (provider ? ('?provider=' + provider) : '');
+    const res = await fetch(url, { method: 'POST', body: fd });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({detail: res.statusText}));
+      throw new Error(err.detail || 'Request failed');
+    }
+    const blob = await res.blob();
+    result.innerHTML = '';
+    const img = new Image();
+    img.src = URL.createObjectURL(blob);
+    result.appendChild(img);
+    meta.innerHTML =
+      badge('Track ' + res.headers.get('X-Compliance-Track')) +
+      badge('provider: ' + res.headers.get('X-Model-Provider')) +
+      badge('cost: ' + res.headers.get('X-Cost-INR') + ' INR') +
+      badge(res.headers.get('X-Billed-To-Client') === 'true'
+              ? 'billed to client' : 'no client charge');
+  } catch (err) {
+    result.innerHTML = '<span class="hint" style="color:#b02a37">' + err.message + '</span>';
+  } finally {
+    go.disabled = false; go.textContent = 'Generate composite';
+  }
+});
+
+function badge(t){ return '<span class="badge">' + t + '</span>'; }
+</script>
+</body>
+</html>

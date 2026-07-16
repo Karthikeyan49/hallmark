@@ -1,0 +1,17 @@
+# Core web framework
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+
+# Image processing engine (Track B compositor — the cost-free core)
+Pillow>=10.3
+
+# Testing
+pytest>=8.0
+httpx>=0.27
+
+# --- Optional add-ons (not required for the free prototype) ---
+# Background removal for the AI model-pane provider (~0 rupees, runs locally):
+#   pip install rembg onnxruntime
+# Hosted generative provider (FLUX.1 [schnell], ~0.25 rupees/image):
+#   set HALLMARK_AI_PROVIDER=flux and the relevant API key env var.
